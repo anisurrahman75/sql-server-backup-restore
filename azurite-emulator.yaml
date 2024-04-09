@@ -5,7 +5,8 @@ services:
     hostname: azurite
     restart: always
     volumes:
-      - /azurite:/workspace
-    command: "azurite -l /workspace -d /workspace/debug.log --blobHost 0.0.0.0 --blobPort 10000"
+      - ./azurite:/workspace
+      - ./azure-certs:/certs
+    command: "azurite -l /workspace -d /workspace/debug.log --blobHost 0.0.0.0 --blobPort 10000 --oauth basic --cert /certs/127.0.0.1.pem --key /certs/127.0.0.1-key.pem"
     ports:
       - "10000:10000"
