@@ -23,34 +23,35 @@
 
 /* SAS */
 
-IF NOT EXISTS
-(SELECT * FROM sys.credentials
-WHERE name = 'https://stashqa.blob.core.windows.net/stashqa')
-CREATE CREDENTIAL [https://stashqa.blob.core.windows.net/stashqa]
-   WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
-   SECRET = '';
+-- IF NOT EXISTS
+-- (SELECT * FROM sys.credentials
+-- WHERE name = 'https://stashqa.blob.core.windows.net/stashqa')
+-- CREATE CREDENTIAL [https://stashqa.blob.core.windows.net/stashqa]
+--    WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
+--    SECRET = '';
 
 
 
 /* SAS */
 
-IF NOT EXISTS
-(SELECT * FROM sys.credentials
-WHERE name = 'http://127.0.0.1:10000/devstoreaccount1/kubestash')
-CREATE CREDENTIAL [http://127.0.0.1:10000/devstoreaccount1/kubestash]
-   WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
-   SECRET = '';
+-- IF NOT EXISTS
+-- (SELECT * FROM sys.credentials
+-- WHERE name = 'https://account1.blob.localhost:10000/stashqa')
+-- CREATE CREDENTIAL [https://account1.blob.localhost:10000/stashqa]
+--    WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
+--    SECRET = 'se=2024-04-15T14%3A39%3A26Z&sig=VARPzL8TAfGEtwNUF6FKAwce7vHDGlfBos6DBbTyxH4%3D&sp=rcwt&spr=https&sr=c&st=2024-04-13T14%3A39%3A26Z&sv=2021-12-02';
 
-SELECT name FROM sys.credentials
-GO
-
-
+-- SELECT name FROM sys.credentials
+-- GO
 
 
 
 
+-- DROP CREDENTIAL "http://account1.blob.localhost:10000/stashqa"
+-- GO
 
-
+-- SELECT name FROM sys.credentials
+-- GO
 
 
 /* To URL using storage account identity and access key */
@@ -73,9 +74,8 @@ GO
 /* To URL using Shared Access Signature. Emulator  */
 
 BACKUP DATABASE demo
-TO URL = 'http://127.0.0.1:10000/devstoreaccount1/kubestash/demo.bak' WITH FORMAT
-
-    GO
+TO URL = 'https://account1.blob.localhost:10000/stashqa/demo.bak' WITH FORMAT
+GO
 
 
 /* Github Issues URL
