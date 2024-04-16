@@ -8,6 +8,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/sas"
 	_ "gocloud.dev/blob/azureblob"
 	"log"
+	"os"
 	"time"
 )
 
@@ -109,8 +110,11 @@ func sasUrl() {
 	//emulatorUri := "https://azurite.example.com:10000/devstoreaccount1"
 	//demo SAS token:
 	//sv=2018-03-28&spr=https%2Chttp&st=2024-04-13T12%3A58%3A47Z&se=2024-04-14T12%3A58%3A47Z&sr=c&sp=rcwl&sig=Oe3PWgcL1cSvwb8PyrrC1X%2Bu%2F4YqH20qxm1Eb9uWtKY%3D
-	accountName, containerName := "account1", "stashqa"
-	credential, err := azblob.NewSharedKeyCredential(accountName, "key1")
+	accountName := os.Getenv("AZURE_ACCOUNT_NAME")
+	accountKey := os.Getenv("AZURE_ACCOUNT_KEY")
+	containerName := "stashqa"
+
+	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	handleError(err)
 	sasQueryParams, err := sas.BlobSignatureValues{
 		Protocol:      sas.ProtocolHTTPS,
