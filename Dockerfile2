@@ -1,0 +1,23 @@
+# Use a base image with Linux distribution of your choice
+FROM ubuntu:20.04
+
+# Install necessary packages for downloading and extracting the binary
+RUN apt-get update && \
+    apt-get install -y curl bzip2 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory inside the Docker container
+WORKDIR /app
+
+# Download the binary from GitHub using curl
+RUN curl -LJO https://github.com/path_to_repository/sqlcmd-v1.6.0-linux-amd64.tar.bz2 \
+    && tar -xf sqlcmd-v1.6.0-linux-amd64.tar.bz2 \
+    && rm sqlcmd-v1.6.0-linux-amd64.tar.bz2 \
+    && mv /app/sqlcmd /usr/local/bin/sqlcmd \
+    && chmod +x /usr/local/bin/sqlcmd
+
+# (Optional) Display the version of sqlcmd after installation
+RUN sqlcmd --version
+
+# Set the command to run when the container starts (optional)
+CMD ["sqlcmd"]

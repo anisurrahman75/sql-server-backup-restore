@@ -20,18 +20,6 @@
 -- CREATE CREDENTIAL [azure_secret] WITH IDENTITY = 'stashqa'
 -- ,SECRET = 'VnbR75fFvUwGMFzLUfELju054pcdxqpHgvSdPavikhsI44RrzStNTWkoWmrCrHM/BukG/654mr0Z+ASt8RuwNA==';
 
-
-/* SAS */
-
--- IF NOT EXISTS
--- (SELECT * FROM sys.credentials
--- WHERE name = 'https://stashqa.blob.core.windows.net/stashqa')
--- CREATE CREDENTIAL [https://stashqa.blob.core.windows.net/stashqa]
---    WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
---    SECRET = '';
-
-
-
 /* SAS */
 
 -- IF NOT EXISTS
@@ -63,20 +51,30 @@
 --      ,STATS = 5;
 -- GO
 
+/* -----------------SAS-- Azure Storage */
 
-/* To URL using Shared Access Signature **Working */
-
--- BACKUP DATABASE demo
--- TO URL = 'https://stashqa.blob.core.windows.net/stashqa/demo.bak';
+-- DROP CREDENTIAL "https://stashqa.blob.core.windows.net/stashqa"
 -- GO
 
+-- IF NOT EXISTS
+-- (SELECT * FROM sys.credentials
+-- WHERE name = 'https://stashqa.blob.core.windows.net/stashqa')
+-- CREATE CREDENTIAL [https://stashqa.blob.core.windows.net/stashqa]
+--    WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
+--    SECRET = 'sv=2022-11-02&ss=b&srt=co&sp=rwdlacx&se=2024-04-19T13:09:07Z&st=2024-04-19T05:09:07Z&spr=https,http&sig=U3Z0LF2orktIbFSgcScqDj29eEVNmU8lr6dvG%2BSNo8o%3D';
+
+SELECT name FROM sys.credentials;
+GO
+
+-- BACKUP DATABASE demo
+-- TO URL = 'https://stashqa.blob.core.windows.net/stashqa/sunny/demo.bak' WITH FORMAT, COMPRESSION;
+-- GO
 
 /* To URL using Shared Access Signature. Emulator  */
 
-BACKUP DATABASE demo
-TO URL = 'https://account1.blob.localhost:10000/stashqa/demo.bak' WITH FORMAT
-GO
-
+-- BACKUP DATABASE demo
+-- TO URL = 'https://account1.blob.localhost:10000/stashqa/demo.bak' WITH FORMAT
+-- GO
 
 /* Github Issues URL
 

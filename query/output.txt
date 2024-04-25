@@ -1,0 +1,21 @@
+Changed database context to 'dummy'.
+(1 row affected)
+1
+(1 row affected)
+2
+(1 row affected)
+3
+(1 row affected)
+4
+(1 row affected)
+5
+(1 row affected)
+6
+(1 row affected)
+7
+(1 row affected)
+8
+(1 row affected)
+9
+(1 row affected)
+10

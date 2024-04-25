@@ -5,127 +5,135 @@ import (
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/sas"
+	gcloud_blob "gocloud.dev/blob"
 	_ "gocloud.dev/blob/azureblob"
+	_ "gocloud.dev/blob/fileblob"
+	_ "gocloud.dev/blob/gcsblob"
+	_ "gocloud.dev/blob/s3blob"
+	"io"
 	"log"
 	"os"
+	"path"
+	"strings"
 	"time"
 )
 
 var ctx = context.Background()
 
 func main() {
-	//blobfs()
-	//connectionString()
-	//connectAccountKey()
-	sasUrl()
+	//xxorm()
+	blobfs()
+	//sasBlob()
+	//downloadBlobAndStream()
 }
 
 func blobfs() {
-
-}
-
-func connectAccountKey() {
-	// general-uri:= https://<account>.blob.core.windows.net/
-	emulatorUri := "https://account1.blob.localhost:10000/"
-	cred, err := azblob.NewSharedKeyCredential("account1", "key1")
-	handleError(err)
-
-	azblobClient, err := azblob.NewClientWithSharedKeyCredential(emulatorUri, cred, nil)
-	handleError(err)
-
-	containerName := "stashqa"
-	err = createContainer(ctx, azblobClient, containerName)
+	dir, fileName := path.Split("demo-mssql-db-backup-frequent-backup-1714475100-5wpzd/dummy.bak")
+	bucket, err := openBucket(ctx, dir)
+	localFilePath := "./dummy.bak"
+	f, err := os.Create(localFilePath)
 	if err != nil {
-		err = fmt.Errorf("can't create container: %w", err)
-		handleError(err)
+		fmt.Printf("Error creating destination file: %v\n\n", err)
 	}
-
-	data := []byte("\nHello, world! This is a blob.\n")
-	blobName := "sample-blob.txt"
-	// Upload to data to blob storage
-	fmt.Printf("Uploading a blob named %s\n", blobName)
-	_, err = azblobClient.UploadBuffer(ctx, containerName, blobName, data, &azblob.UploadBufferOptions{})
-	handleError(err)
-
-	listBlob(azblobClient, containerName)
-
-}
-
-func connectionString() {
-	containerName := "stashqa"
-	azblobClient, err := azblob.NewClientFromConnectionString("DefaultEndpointsProtocol=https;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=https://azurite.example.com:10000/devstoreaccount1;", nil)
-	//azblobClient, err := azblob.NewClientFromConnectionString("DefaultEndpointsProtocol=https;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=https://127.0.0.1:10000/devstoreaccount1;", nil)
-	if err != nil {
-		handleError(err)
-	}
-	//err = createContainer(ctx, azblobClient, containerName)
-	//if err != nil {
-	//	err = fmt.Errorf("can't create container: %w", err)
-	//	handleError(err)
+	defer f.Close()
+	//if err := bucket.Download(ctx, fileName, f, nil); err != nil {
+	//	fmt.Println(err)
 	//}
-	//
-	//data := []byte("\nHello, world! This is a blob.\n")
-	//blobName := "sample-blob.txt"
-	//
-	//// Upload to data to blob storage
-	//fmt.Printf("Uploading a blob named %s\n", blobName)
-	//_, err = azblobClient.UploadBuffer(ctx, containerName, blobName, data, &azblob.UploadBufferOptions{})
-	//handleError(err)
-	listBlob(azblobClient, containerName)
-}
 
-func createContainer(ctx context.Context, azblobClient *azblob.Client, containerName string) error {
-	if _, err := azblobClient.CreateContainer(ctx, containerName, nil); err != nil {
-		return fmt.Errorf("can't create containerName '%s': %w", containerName, err)
+	x, err := bucket.Open(fileName)
+
+	_, err = io.Copy()
+	if err != nil {
+		panic(err)
 	}
 
-	return nil
+	println("Data copied successfully!")
 }
 
-func listBlob(client *azblob.Client, containerName string) {
-	fmt.Println("Listing the blobs in the container:")
+func openBucket(ctx context.Context, dir string) (*gcloud_blob.Bucket, error) {
+	var bucket *gcloud_blob.Bucket
+	var err error
 
-	pager := client.NewListBlobsFlatPager(containerName, &azblob.ListBlobsFlatOptions{
-		Include: azblob.ListBlobsInclude{Snapshots: true, Versions: true},
-	})
+	bucket, err = gcloud_blob.OpenBucket(ctx, "azblob://kubestashqa")
+	if err != nil {
+		return nil, err
+	}
 
-	for pager.More() {
-		resp, err := pager.NextPage(context.TODO())
+	suffix := strings.Trim(path.Join("sunny", dir), "/") + "/"
+	if suffix == string(os.PathSeparator) {
+		return bucket, nil
+	}
+	return gcloud_blob.PrefixedBucket(bucket, suffix), nil
+}
+
+func downloadBlobAndStream() {
+	accountName := os.Getenv("AZURE_STORAGE_ACCOUNT")
+	accountKey := os.Getenv("AZURE_STORAGE_KEY")
+	//fmt.Println(accountName)
+	//fmt.Println(accountKey)
+
+	// Create a blobClient object to a blob in the container (we assume the container & blob already exist).
+	blobURL := fmt.Sprintf("https://%s.blob.core.windows.net/stashqa/demo.bak", accountName)
+	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
+	handleError(err)
+	blobClient, err := blob.NewClientWithSharedKeyCredential(blobURL, credential, nil)
+	handleError(err)
+
+	var size int64
+	var buf []byte
+	size, err = blobClient.DownloadBuffer(ctx, buf, nil)
+	if err != nil {
+		fmt.Println("azure Blobstore: %w", err)
 		handleError(err)
-
-		for _, blob := range resp.Segment.BlobItems {
-			fmt.Println(*blob.Name)
-		}
 	}
+	fmt.Println(size)
 }
+
+func sasBlob() {
+	accountName := os.Getenv("AZURE_STORAGE_ACCOUNT")
+	accountKey := os.Getenv("AZURE_STORAGE_KEY")
+	fmt.Println(accountName)
+	fmt.Println(accountKey)
+	containerName := "stashqa"
+	_ = containerName
+	// Create a credential object using your account name and key
+	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
+	if err != nil {
+		log.Fatal("Invalid credentials with error: " + err.Error())
+	}
+
+	// Create BlobSASSignatureValues for specifying SAS parameters
+	sasQueryParams := sas.AccountSignatureValues{
+		Protocol: sas.ProtocolHTTPSandHTTP, // Use HTTPS protocol
+		ResourceTypes: to.Ptr(sas.AccountResourceTypes{
+			Object: true,
+		}).String(),
+		ExpiryTime: time.Now().UTC().Add(2 * time.Hour), // SAS expiry time
+		Permissions: to.Ptr(sas.AccountPermissions{ // Permissions for the SAS token
+			Read:   true,
+			Write:  true,
+			Create: true,
+		}).String(),
+	}
+
+	// Generate SAS token with the specified parameters
+	queryParams, err := sasQueryParams.SignWithSharedKey(credential)
+	if err != nil {
+		log.Fatal("Failed to generate SAS token with error: " + err.Error())
+	}
+
+	// Encode the SAS token into a string
+	sasToken := queryParams.Encode()
+
+	// Print the generated SAS token
+	fmt.Println("Generated SAS Token:")
+	fmt.Println(sasToken)
+}
+
 func handleError(err error) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-}
-
-func sasUrl() {
-	//emulatorUri := "https://account1.blob.localhost:10000/"
-	//emulatorUri := "https://azurite.example.com:10000/devstoreaccount1"
-	//demo SAS token:
-	//sv=2018-03-28&spr=https%2Chttp&st=2024-04-13T12%3A58%3A47Z&se=2024-04-14T12%3A58%3A47Z&sr=c&sp=rcwl&sig=Oe3PWgcL1cSvwb8PyrrC1X%2Bu%2F4YqH20qxm1Eb9uWtKY%3D
-	accountName := os.Getenv("AZURE_ACCOUNT_NAME")
-	accountKey := os.Getenv("AZURE_ACCOUNT_KEY")
-	containerName := "stashqa"
-
-	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
-	handleError(err)
-	sasQueryParams, err := sas.BlobSignatureValues{
-		Protocol:      sas.ProtocolHTTPS,
-		StartTime:     time.Now().UTC(),
-		ExpiryTime:    time.Now().UTC().Add(48 * time.Hour),
-		Permissions:   to.Ptr(sas.BlobPermissions{Read: true, Create: true, Write: true, Tag: true}).String(),
-		ContainerName: containerName,
-	}.SignWithSharedKey(credential)
-	handleError(err)
-
-	//sasURL := fmt.Sprintf("https://%s.blob.core.localhost/?%s", accountName, sasQueryParams.Encode())
-	fmt.Println(sasQueryParams.Encode())
-
 }

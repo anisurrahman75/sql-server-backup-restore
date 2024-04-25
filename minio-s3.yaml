@@ -1,19 +1,4 @@
 services:
-  minio:
-    container_name: minio
-    image: minio/minio:latest
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - ./minio-data:/data
-    environment:
-      - MINIO_ROOT_USER=anisur
-      - MINIO_ROOT_PASSWORD=anisur123
-    command: server /data --console-address ":9001"
-    networks:
-      - s3-backup-restore
-
   sql-server:
     user: root
     container_name: sql-server
@@ -23,15 +8,11 @@ services:
       - "1433:1433"
     volumes:
       - ./sql-data:/var/opt/mssql
-      - ./certs/public.crt:/var/opt/mssql/security/ca-certificates/public.crt
+#      - ./certs/public.crt:/var/opt/mssql/security/ca-certificates/public.crt
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=S0methingS@Str0ng!
-      - MINIO_IP=$MINIO_IP
-    extra_hosts:
-      - "s3.example.com:$MINIO_IP" # IP of MINIO Endpoint
     networks:
       - s3-backup-restore
-
 networks:
   s3-backup-restore:
