@@ -8,10 +8,15 @@ services:
       - "1433:1433"
     volumes:
       - ./sql-data:/var/opt/mssql
-#      - ./certs/public.crt:/var/opt/mssql/security/ca-certificates/public.crt
+      - ./certs/mssql.pem:/etc/ssl/certs/mssql.pem
+      - ./certs/mssql.key:/etc/ssl/private/mssql.key
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=S0methingS@Str0ng!
+      - TLS_CERT = /etc/ssl/certs/mssql.pem
+      - TLS_KEY = /etc/ssl/private/mssql.key
+      - TLS_PROTOCOLS = 1.2
+      - FORCE_ENCRYPTION = 1
     networks:
       - s3-backup-restore
 networks:

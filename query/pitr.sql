@@ -1,21 +1,51 @@
-CREATE DATABASE demo;
+-- Full Backup
+USE master;
+BACKUP DATABASE demo TO DISK = '/sql-backup/demo_full.bak';
+
+-- Differential Backup
+
+BACKUP DATABASE demo TO DISK = '/sql-backup/demo_diff.bak' WITH DIFFERENTIAL;
+
+-- LOG Backup Backup
+
+BACKUP LOG demo TO DISK = '/sql-backup/demo_log.trn';
+
+
+
+-- RESTORE from Backup
+
+USE master
+RESTORE DATABASE demo FROM DISK = '/sql-backup/demo_full.bak' WITH NORECOVERY;
 GO
 
-BACKUP DATABASE demo TO DISK = '/sql-backup/demo.bak' WITH FORMAT, COMPRESSION;
-BACKUP DATABASE demo TO DISK = 'N' WITH FORMAT, COMPRESSION;
+
+USE master
+RESTORE DATABASE demo FROM DISK = '/sql-backup/demo_diff.bak' WITH RECOVERY;
 GO
+
+
+USE master
+RESTORE LOG demo FROM DISK = '/sql-backup/demo_log.trn' WITH RECOVERY;
+GO
+
+-- Query
+
+USE master
+select name from sys.databases;
+
+CREATE DATABASE demo
+
+USE master;
+ALTER DATABASE demo SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
 
 USE master;
 DROP DATABASE demo;
-GO
 
-USE master
-RESTORE DATABASE demo FROM DISK = '/sql-backup/demo.bak' WITH REPLACE, RECOVERY
-GO
+USE demo
+select name FROM sys.tables;
 
-
-SELECT name FROM sys.databases;
-GO
+USE demo
+select * from first_table
 
 USE demo
 CREATE TABLE first_table (ID INT, NAME NVARCHAR(255), AGE INT);
@@ -23,45 +53,6 @@ INSERT INTO first_table(ID, Name, Age) VALUES (4, 'Anisur Rahman', 30);
 
 USE demo
 INSERT INTO first_table(ID, Name, Age) VALUES (1, 'John Doe', 25), (2, 'Jane Smith', 30), (3, 'Bob Johnson', 22);
-
-
-
-
-USE demo
-select name FROM sys.tables;
-
-USE demo
-Select * from first_table;
-
-USE demo
-DROP table data;
-
-USE master
-DROP DATABASE demo;
-
-
-
-
-SELECT database_name, backup_size, compressed_backup_size,
-backup_size/compressed_backup_size AS CompressedRatio
-FROM msdb..backupset; 
-
-
-
-SELECT * FROM msdb.dbo.backupset;
-
-
-
-
-
-
-
-
-USE dummy
-GO
-EXEC sp_spaceused @updateusage = N'TRUE'
-GO
-
 
 
 -- SEE TRANSACTION LOG History 
@@ -105,3 +96,11 @@ INNER JOIN msdb.dbo.backupmediaset bms
 WHERE bs.backup_start_date > DATEADD(MONTH, - 2, sysdatetime()) --only look at last two months
 ORDER BY bs.database_name ASC,
     bs.Backup_Start_Date DESC;
+
+
+
+
+
+
+
+
